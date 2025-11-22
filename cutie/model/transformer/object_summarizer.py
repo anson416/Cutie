@@ -1,15 +1,16 @@
-from typing import List, Dict, Optional
-from omegaconf import DictConfig
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from omegaconf import DictConfig
+
 from cutie.model.transformer.positional_encoding import PositionalEncoding
 
 
 # @torch.jit.script
 def _weighted_pooling(masks: torch.Tensor, value: torch.Tensor,
-                      logits: torch.Tensor) -> (torch.Tensor, torch.Tensor):
+                      logits: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     # value: B*num_objects*H*W*value_dim
     # logits: B*num_objects*H*W*num_summaries
     # masks: B*num_objects*H*W*num_summaries: 1 if allowed
@@ -55,7 +56,7 @@ class ObjectSummarizer(nn.Module):
     def forward(self,
                 masks: torch.Tensor,
                 value: torch.Tensor,
-                need_weights: bool = False) -> (torch.Tensor, Optional[torch.Tensor]):
+                need_weights: bool = False) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         # masks: B*num_objects*(H0)*(W0)
         # value: B*num_objects*value_dim*H*W
         # -> B*num_objects*H*W*value_dim
@@ -75,7 +76,7 @@ class ObjectSummarizer(nn.Module):
             pe = self.pos_enc(value)
             value = value + pe
 
-        with torch.cuda.amp.autocast(enabled=False):
+        with torch.amp.autocast(device_type=masks.device.type, enabled=False):
             value = value.float()
             feature = self.feature_pred(value)
             logits = self.weights_pred(value)

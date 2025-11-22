@@ -1,10 +1,11 @@
-from typing import List, Iterable
+from typing import Iterable, Tuple
+
 import torch
 import torch.nn.functional as F
 
 
 # STM
-def pad_divide_by(in_img: torch.Tensor, d: int) -> (torch.Tensor, Iterable[int]):
+def pad_divide_by(in_img: torch.Tensor, d: int) -> Tuple[torch.Tensor, Iterable[int]]:
     h, w = in_img.shape[-2:]
 
     if h % d > 0:
@@ -45,7 +46,7 @@ def unpad(img: torch.Tensor, pad: Iterable[int]) -> torch.Tensor:
 
 # @torch.jit.script
 def aggregate(prob: torch.Tensor, dim: int) -> torch.Tensor:
-    with torch.cuda.amp.autocast(enabled=False):
+    with torch.amp.autocast(device_type=prob.device.type, enabled=False):
         prob = prob.float()
         new_prob = torch.cat([torch.prod(1 - prob, dim=dim, keepdim=True), prob],
                              dim).clamp(1e-7, 1 - 1e-7)
