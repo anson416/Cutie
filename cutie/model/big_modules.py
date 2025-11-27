@@ -286,8 +286,7 @@ class MaskDecoder(nn.Module):
 
             p8 = self.up_16_8(p16, f8)
             p4 = self.up_8_4(p8, f4)
-            with torch.amp.autocast(device_type=sensory.device.type, enabled=False):
-                logits = self.pred(F.relu(p4.flatten(start_dim=0, end_dim=1).float()))
+            logits = self.pred(F.relu(p4.flatten(start_dim=0, end_dim=1).float()))
 
             if update_sensory:
                 p4 = torch.cat(

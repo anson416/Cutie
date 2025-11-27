@@ -76,11 +76,10 @@ class ObjectSummarizer(nn.Module):
             pe = self.pos_enc(value)
             value = value + pe
 
-        with torch.amp.autocast(device_type=masks.device.type, enabled=False):
-            value = value.float()
-            feature = self.feature_pred(value)
-            logits = self.weights_pred(value)
-            sums, area = _weighted_pooling(repeated_masks, feature, logits)
+        value = value.float()
+        feature = self.feature_pred(value)
+        logits = self.weights_pred(value)
+        sums, area = _weighted_pooling(repeated_masks, feature, logits)
 
         summaries = torch.cat([sums, area], dim=-1)
 
